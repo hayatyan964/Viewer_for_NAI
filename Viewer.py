@@ -9,8 +9,10 @@ import hashlib
 import tempfile
 
 TAG_FILE = "tags.json"
-IMG_DIR = "./images"
+IMG_DIR = "./images" 
 
+
+# 初期画像ディレクトリ作成
 if not os.path.exists(IMG_DIR):
     os.makedirs(IMG_DIR)
 
@@ -25,6 +27,7 @@ def sanitize_filename(prompt, ext=".png"):
     hash_part = hashlib.sha1(prompt.encode("utf-8")).hexdigest()[:8]
     return f"{safe_prompt}_{hash_part}{ext}"
 
+# メタデータ抽出
 def extract_prompt_metadata(image_path):
     try:
         img = Image.open(image_path)
@@ -73,23 +76,32 @@ def main(page: ft.Page):
     page.title = "画像ビューワ"
     page.scroll = True
 
-    if not os.path.isdir(IMG_DIR):
-        os.makedirs(IMG_DIR)
-
     selected_image = ft.Image(expand=True)
     metadata_text = ft.Text(value="メタデータ表示", selectable=True)
     prompt_filter_input = ft.TextField(label="プロンプトフィルタ", on_change=lambda e: refresh_image_list())
     image_grid = ft.GridView(expand=True, max_extent=100, child_aspect_ratio=1.0, spacing=5, run_spacing=10)
 
-    
+    # 画像フォルダ変更
+    def file_picker_result(e: ft.FilePickerResultEvent):
+        global IMG_DIR
+        if e.path:
+            IMG_DIR = e.path  # ← e.files じゃなく e.path！
+            print(f"画像フォルダ変更: {IMG_DIR}")
+            rename_images()
+            refresh_image_list()
+        page.update()
 
+
+    file_picker = ft.FilePicker(on_result=file_picker_result)
+    page.overlay.append(file_picker)
+
+    # 画像表示
     def show_image(path):
         selected_image.src = path
         metadata_text.value = extract_prompt_metadata(path)
         page.update()
 
-    
-
+    # リネームボタン
     def on_rename_click(e):
         count = rename_images()
         prompt_filter_input.value = ""
@@ -97,6 +109,7 @@ def main(page: ft.Page):
         metadata_text.value = f"{count} 件リネーム"
         page.update()
     
+    # クリック可能サムネ表示
     def make_thumb_button(img_path):
         thumb_path = generate_thumbnail_file(img_path)
         thumb_image = ft.Image(
@@ -113,7 +126,7 @@ def main(page: ft.Page):
             padding=5
         )
 
-
+    # 画像リスト再読み込み
     def refresh_image_list():
         image_grid.controls.clear()
         keyword = prompt_filter_input.value.lower()
@@ -132,20 +145,24 @@ def main(page: ft.Page):
     ft.Column([
         ft.Row([
             prompt_filter_input,
-            ft.ElevatedButton("ファイル名を修正", on_click=on_rename_click),
+            ft.ElevatedButton("ファイル名を修正", on_click = on_rename_click),
+            ft.ElevatedButton(
+                    "画像フォルダ変更",
+                    icon=ft.icons.FILE_OPEN,
+                    on_click=lambda _: file_picker.get_directory_path(),
+                ),
         ]),
         ft.Row([
             # folder_grid
         ]),
         ft.Row([
-            ft.Container(image_grid, expand=True, height=300)
+            ft.Container(image_grid, expand = True, height = 300)
         ]),
         ft.Row([
             selected_image,
-            ft.Column([metadata_text], scroll=ft.ScrollMode.ALWAYS, expand=True)
+            ft.Column([metadata_text], scroll = ft.ScrollMode.ALWAYS, expand = True)
         ])
     ])
 )
-
 
 ft.app(target=main)

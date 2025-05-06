@@ -11,6 +11,9 @@ import tempfile
 TAG_FILE = "tags.json"
 IMG_DIR = "./images"
 
+if not os.path.exists(IMG_DIR):
+    os.makedirs(IMG_DIR)
+
 THUMBNAIL_SIZE = (64, 64)
 
 #ファイル名変更
@@ -133,7 +136,7 @@ def main(page: ft.Page):
         ]),
         ft.Row([
             # folder_grid
-        ])
+        ]),
         ft.Row([
             ft.Container(image_grid, expand=True, height=300)
         ]),

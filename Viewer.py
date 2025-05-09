@@ -16,7 +16,7 @@ IMG_DIR = "./images"
 if not os.path.exists(IMG_DIR):
     os.makedirs(IMG_DIR)
 
-THUMBNAIL_SIZE = (64, 64)
+THUMBNAIL_SIZE = (128, 128)
 
 #ファイル名変更
 def sanitize_filename(prompt, ext=".png"):
@@ -27,7 +27,7 @@ def sanitize_filename(prompt, ext=".png"):
     hash_part = hashlib.sha1(prompt.encode("utf-8")).hexdigest()[:8]
     return f"{safe_prompt}_{hash_part}{ext}"
 
-# メタデータ抽出
+# メタデータ プロンプト抽出
 def extract_prompt_metadata(image_path):
     try:
         img = Image.open(image_path)
@@ -35,7 +35,7 @@ def extract_prompt_metadata(image_path):
             comment_data = json.loads(img.info["Comment"])
             return comment_data.get("prompt", "(no prompt)")
         else:
-            return "(no metadata)"
+            return "(no prompt)"
     except Exception as e:
         return f"Error: {e}"
 
@@ -71,8 +71,9 @@ def rename_images():
                     print(f"リネーム失敗: {file} -> {e}")
         return renamed_count
 
+
 def main(page: ft.Page):
-    rename_images()
+    # rename_images()
     page.title = "画像ビューワ"
     page.scroll = True
 
@@ -85,7 +86,7 @@ def main(page: ft.Page):
     def file_picker_result(e: ft.FilePickerResultEvent):
         global IMG_DIR
         if e.path:
-            IMG_DIR = e.path  # ← e.files じゃなく e.path！
+            IMG_DIR = e.path
             print(f"画像フォルダ変更: {IMG_DIR}")
             rename_images()
             refresh_image_list()
@@ -130,15 +131,16 @@ def main(page: ft.Page):
     def refresh_image_list():
         image_grid.controls.clear()
         keyword = prompt_filter_input.value.lower()
-        for file in os.listdir(IMG_DIR):
-            if file.lower().endswith(".png"):
-                path = os.path.join(IMG_DIR, file)
-                prompt = extract_prompt_metadata(path).lower()
-                if keyword in prompt:
-                    btn = make_thumb_button(path)
-                    image_grid.controls.append(btn)
-        page.update()
-
+        for root, dirs, files in os.walk(IMG_DIR):
+            for file in files:
+                if file.lower().endswith(".png"):
+                    path = os.path.join(root, file)
+                    prompt = extract_prompt_metadata(path).lower()
+                    if keyword in prompt:
+                        btn = make_thumb_button(path)
+                        image_grid.controls.append(btn)
+    page.update()
+    
     refresh_image_list()
 
     page.add(

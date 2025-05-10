@@ -1,5 +1,7 @@
 # image files
 images
+# user config
+userconfig.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

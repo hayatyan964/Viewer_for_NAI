@@ -7,15 +7,6 @@ import hashlib
 import tempfile
 import json
 
-# 後で基本はdefaultconfig userconfigがあればそっちを開くようにする
-'''
-if os.path.exists("./userconfig"):
-    f_in = open ('./userconfig.json')
-else:
-    f_in = open('./defaultconfig.json')
-data = json.load(f_in)
-'''
-
 image_paths = [] # 前後ボタン用画像パス
 current_index = -1 # 前後ボタン用現在位置
 
@@ -94,9 +85,8 @@ def main(page: ft.Page):
     # 表示エリアに制限をつけて中央寄せ
     image_display_area = ft.Container(
         content=selected_image,
-        #alignment=ft.alignment.center,
         expand=True,
-        height=500,  # 高さはお好みで調整してね～
+        height=500,
     )
 
     # 前後ボタン
